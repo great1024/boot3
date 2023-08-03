@@ -17,6 +17,7 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(@NotNull ChannelHandlerContext ctx, @NotNull Object msg) throws Exception {
         Gson gson = new Gson();
+        System.out.println("服务端信息解析, msg = " + msg);
         Response<String> response = gson.fromJson(msg.toString(), Response.class);
         promise.setSuccess(response);
     }

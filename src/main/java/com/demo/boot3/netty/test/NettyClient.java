@@ -10,7 +10,10 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.sctp.nio.NioSctpChannel;
+import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.codec.string.StringDecoder;
@@ -29,7 +32,7 @@ public class NettyClient {
     static {
         bootstrap = new Bootstrap();
         group = new NioEventLoopGroup();
-        bootstrap.channel(NioServerSocketChannel.class);
+        bootstrap.channel(NioSocketChannel.class);
         bootstrap.group(group);
         bootstrap.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
@@ -39,9 +42,9 @@ public class NettyClient {
         DefaultPromise<Response<String>> objectDefaultPromise = new DefaultPromise<>(group.next());
         ClientHandler clientHandler = new ClientHandler();
         clientHandler.setPromise(objectDefaultPromise);
-        bootstrap.handler(new ChannelInitializer<NioServerSocketChannel>() {
+        bootstrap.handler(new ChannelInitializer<NioSocketChannel>() {
             @Override
-            protected void initChannel(@NotNull NioServerSocketChannel ch) throws Exception {
+            protected void initChannel(@NotNull NioSocketChannel ch) throws Exception {
                 ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE,0,4,0,4));
                 ch.pipeline().addLast(new StringDecoder());
                 ch.pipeline().addLast(clientHandler);
@@ -49,8 +52,7 @@ public class NettyClient {
                 ch.pipeline().addLast(new StringEncoder(StandardCharsets.UTF_8));
             }
         });
-        ChannelFuture sync = bootstrap.connect("localhost", 8080).sync();
-        sync.sync();
+        ChannelFuture sync = bootstrap.connect("localhost", 12306).sync();
         RequestFuture<String> requestFuture = new RequestFuture<>();
         requestFuture.setId(1);
         requestFuture.setRequest("hello world");
